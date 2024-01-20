@@ -17,7 +17,7 @@ public class SharedPreferencesManager {
     private final SharedPreferences preferences;
     private final SharedPreferences.Editor editor;
 
-    private SharedPreferencesManager(Context context, String prefName, String keyStringList) {
+    private SharedPreferencesManager(Context context, String prefName) {
         preferences = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
         editor = preferences.edit();
     }
@@ -26,14 +26,12 @@ public class SharedPreferencesManager {
         return new Builder(context);
     }
 
-    // String listesini SharedPreferences'e kaydetme
     public void saveStringList(String key, List<String> stringList) {
         Set<String> stringSet = new HashSet<>(stringList);
         editor.putStringSet(key, stringSet);
         editor.apply();
     }
 
-    // SharedPreferences'ten string listesini almak
     public List<String> getStringList(String key) {
         Set<String> stringSet = preferences.getStringSet(key, new HashSet<>());
         return new ArrayList<>(stringSet);
@@ -42,7 +40,6 @@ public class SharedPreferencesManager {
     public static class Builder {
         private final Context context;
         private String prefName = "MapPrefs";
-        private String keyStringList = "mapList";
 
         private Builder(Context context) {
             this.context = context;
@@ -53,24 +50,19 @@ public class SharedPreferencesManager {
             return this;
         }
 
-        public Builder setKeyStringList(String keyStringList) {
-            this.keyStringList = keyStringList;
-            return this;
-        }
-
         public SharedPreferencesManager.Builder saveStringList(String key, List<String> stringList) {
-            SharedPreferencesManager manager = new SharedPreferencesManager(context, prefName, keyStringList);
+            SharedPreferencesManager manager = new SharedPreferencesManager(context, prefName);
             manager.saveStringList(key, stringList);
             return this;
         }
 
         public List<String> getStringList(String key) {
-            SharedPreferencesManager manager = new SharedPreferencesManager(context, prefName, keyStringList);
+            SharedPreferencesManager manager = new SharedPreferencesManager(context, prefName);
             return manager.getStringList(key);
         }
 
         public SharedPreferencesManager build() {
-            return new SharedPreferencesManager(context, prefName, keyStringList);
+            return new SharedPreferencesManager(context, prefName);
         }
     }
 }

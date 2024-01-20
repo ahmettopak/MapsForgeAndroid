@@ -5,6 +5,7 @@ import android.os.Looper;
 import android.util.Log;
 
 import com.ahmet.mapsforgeapp.MapViewController;
+import com.ahmet.mapsforgeapp.map.MapUtils;
 
 import org.mapsforge.core.model.LatLong;
 
@@ -34,7 +35,7 @@ public class FakeGpsService {
             @Override
             public void run() {
                 new Handler(Looper.getMainLooper()).post(() -> {
-                    gpsListener.onLocationUpdate(MapViewController.generateRandomLocation(new LatLong(ANKARA_LATITUDE, ANKARA_LONGITUDE), 0.02));
+                    gpsListener.onLocationUpdate(MapUtils.generateRandomLocation(new LatLong(ANKARA_LATITUDE, ANKARA_LONGITUDE), 0.02));
                 });
             }
         };

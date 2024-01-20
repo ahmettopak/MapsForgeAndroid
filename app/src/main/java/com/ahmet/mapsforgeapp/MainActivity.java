@@ -71,6 +71,7 @@ import android.widget.CompoundButton;
 import com.ahmet.mapsforgeapp.databinding.ActivityMainBinding;
 import com.ahmet.mapsforgeapp.gps.FakeGpsService;
 import com.ahmet.mapsforgeapp.gps.GpsListener;
+import com.ahmet.mapsforgeapp.map.MapUtils;
 
 import org.mapsforge.core.model.LatLong;
 import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
@@ -129,7 +130,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     @SuppressLint("UseCompatLoadingForDrawables")
     private void setupMapView() {
         mapViewController.setMapView(findViewById(R.id.mapView));
-        robotMarker = mapViewController.createMarker(getDrawable(android.R.drawable.ic_menu_mylocation));
+        robotMarker = MapUtils.createMarker(getDrawable(android.R.drawable.ic_menu_mylocation));
 
         mapViewController.getMapView().setZoomLevel((byte) 15);
 
@@ -159,7 +160,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
         binding.gpsLocationTextView.setText(String.format("%s%s", getString(R.string.gps_location), robotMarker.getLatLong().toString()));
 
-        Log.d(TAG, "Lat Long Test Link: " + generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
+        Log.d(TAG, "Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
 
     }
 
@@ -170,18 +171,17 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         intent.setType("*/*"); // Tüm dosya türlerini seçmek için
         startActivityForResult(Intent.createChooser(intent, "Harita Dosyasını Seç"), PICK_MAP_REQUEST);
     }
+
     private void resetMapSource(){
         mapList.clear();
-      //  SharedPreferencesManager.saveStringList(this , mapList);
+
+        preferencesManager.saveStringList(MAP_LIST_KEY , mapList);
+
+        mapViewController.clearMap();
+
     }
 
-    @NonNull
-    private static String generateLatLongMapsLink(double latitude, double longitude) {
-        Uri.Builder builder = Uri.parse("https://www.latlong.net/c/").buildUpon();
-        builder.appendQueryParameter("lat", String.valueOf(latitude));
-        builder.appendQueryParameter("long", String.valueOf(longitude));
-        return builder.build().toString();
-    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -208,52 +208,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
             }
         }
     }
-//    private void saveSelectedMapFile(Uri selectedMapUri) {
-//        try {
-//            InputStream inputStream = getContentResolver().openInputStream(selectedMapUri);
-//
-//            // Hedef dizini belirle
-//            File destinationDirectory = getDestinationDirectory();
-//
-//            // Dosya adını seçili dosyanın adıyla aynı yap
-//            String fileName = getFileName(selectedMapUri);
-//
-//            // Hedef dosyanın yolunu oluştur
-//            File destinationFile = new File(destinationDirectory, fileName);
-//
-//            // Dosyayı kopyala
-//            copyFile(inputStream, new FileOutputStream(destinationFile));
-//
-//            Toast.makeText(this, "Dosya başarıyla kaydedildi", Toast.LENGTH_SHORT).show();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//            Toast.makeText(this, "Dosya kaydedilirken bir hata oluştu", Toast.LENGTH_SHORT).show();
-//        }
-//    }
-//
-//    private File getDestinationDirectory() {
-//        // Hedef dizini belirle, örneğin:
-//        // return new File(Environment.getExternalStorageDirectory(), "MyMapFiles");
-//        // Bu örnekte dosyaların "MyMapFiles" dizinine kaydedileceği varsayılmıştır.
-//        return Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-//    }
-//
-//    private String getFileName(Uri uri) {
-//        // Uri'den dosya adını al, örneğin:
-//        // String fileName = uri.getLastPathSegment();
-//        // Bu örnekte dosya adının Uri'nin son segmenti olduğu varsayılmıştır.
-//        return uri.getLastPathSegment();
-//    }
-//
-//    private void copyFile(InputStream inputStream, OutputStream outputStream) throws IOException {
-//        byte[] buffer = new byte[1024];
-//        int length;
-//        while ((length = inputStream.read(buffer)) > 0) {
-//            outputStream.write(buffer, 0, length);
-//        }
-//        inputStream.close();
-//        outputStream.close();
-//    }
     @Override
     protected void onStart() {
         super.onStart();
@@ -263,7 +217,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         preferencesManager = SharedPreferencesManager
                 .with(this)
                 .setPrefName(MAP_PREF_ID)
-                .setKeyStringList(MAP_LIST_KEY)
                 .build();
 
 
@@ -355,16 +308,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
                     Toast.makeText(MainActivity.this, "Storage Permissions Denied", Toast.LENGTH_SHORT).show();
                 }
             }
-        }
-    }
-
-    private FileInputStream getFileInputStreamForSpecificFile(String filePath) {
-        try {
-            return new FileInputStream(filePath);
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-            Toast.makeText(this, e.getMessage(), Toast.LENGTH_SHORT).show();
-            return null;
         }
     }
 

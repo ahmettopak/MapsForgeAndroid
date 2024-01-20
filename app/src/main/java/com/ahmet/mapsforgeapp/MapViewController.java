@@ -47,21 +47,13 @@ public class MapViewController {
     private final Context context;
     List<Marker> markerList = new ArrayList<>();
     MultiMapDataStore multiMapDataStore;
-    private static final double DEFAULT_LATITUDE = 39.721148566384485;
-    private static final double DEFAULT_LONGITUDE = 32.84021947057348;
 
     public MapViewController(Context context){
         this.context = context;
         multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
 
     }
-    public Marker createMarker(LatLong latLong, Drawable markerIcon) {
-        return new Marker(latLong, AndroidGraphicFactory.convertToBitmap(markerIcon), 0, 0);
-    }
 
-    public Marker createMarker(Drawable markerIcon) {
-        return new Marker(new LatLong(DEFAULT_LATITUDE,DEFAULT_LONGITUDE), AndroidGraphicFactory.convertToBitmap(markerIcon), 0, 0);
-    }
     public void updateMarkerLatLong(Marker marker , LatLong latLong) {
         marker.setLatLong(latLong);
     }
@@ -83,7 +75,7 @@ public class MapViewController {
 
     public void addMapTile(FileInputStream fileInputStream) {
         try {
-            multiMapDataStore.addMapDataStore(new MapFile(fileInputStream) , false ,false);
+            multiMapDataStore.addMapDataStore(new MapFile(fileInputStream) , false ,true);
 
             TileRendererLayer tileRendererLayer = new TileRendererLayer(tileCache, multiMapDataStore,
                     mapView.getModel().mapViewPosition, AndroidGraphicFactory.INSTANCE);
@@ -111,25 +103,7 @@ public class MapViewController {
             addMapTile(fileInputStream);
         }
     }
-    public static LatLong generateRandomLocation(LatLong destLatLong, double radius) {
-        double angle = Math.random() * 2 * Math.PI;
-        double distance = Math.random() * radius;
 
-        double lat = destLatLong.getLatitude() + distance * Math.cos(angle);
-        double lon = destLatLong.getLongitude() + distance * Math.sin(angle);
-
-        return new LatLong(lat, lon);
-    }
-
-    public static LatLong generateRandomLocation(LatLong destLatLong, double tolerance, double radius) {
-        double angle = Math.random() * 2 * Math.PI;
-        double distance = Math.random() * tolerance;
-
-        double lat = destLatLong.getLatitude() + distance * Math.cos(angle);
-        double lon = destLatLong.getLongitude() + distance * Math.sin(angle);
-
-        return new LatLong(lat, lon);
-    }
 
     public MapView getMapView() {
         return mapView;
@@ -141,7 +115,6 @@ public class MapViewController {
         setTileCache();
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private void initMapView() {
         mapView.setClickable(true);
         mapView.getMapScaleBar().setVisible(true);
@@ -153,11 +126,25 @@ public class MapViewController {
     }
 
     public void setTileCache() {
+
+        tileCache = null;
+
         int tileSize = mapView.getModel().displayModel.getTileSize();
         float scaleFactor = 1.0f;
         double overdrawFactor = mapView.getModel().frameBufferModel.getOverdrawFactor();
 
         tileCache = AndroidUtil.createTileCache(context, "mapcache", tileSize, scaleFactor, overdrawFactor);
+    }
+
+    public void clearMap(){
+
+        mapView.getLayerManager().getLayers().clear();
+
+        multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
+
+        setTileCache();
+        markerList.clear();
+        mapView.invalidate();
     }
 
 
