@@ -51,7 +51,6 @@ public class MapViewController {
     public MapViewController(Context context){
         this.context = context;
         multiMapDataStore = new MultiMapDataStore(MultiMapDataStore.DataPolicy.RETURN_ALL);
-
     }
 
     public void updateMarkerLatLong(Marker marker , LatLong latLong) {
@@ -146,6 +145,7 @@ public class MapViewController {
         markerList.clear();
         mapView.invalidate();
     }
+
 
 
 }

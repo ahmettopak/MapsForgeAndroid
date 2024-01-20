@@ -19,13 +19,9 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
-import android.os.Looper;
+
 import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.Toast;
 
@@ -36,58 +32,26 @@ import org.mapsforge.core.model.LatLong;
 import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
 import org.mapsforge.map.layer.overlay.Marker;
 
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
-import android.app.Activity;
-import android.content.Intent;
-import android.content.pm.PackageManager;
-import android.net.Uri;
-import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-
-import com.ahmet.mapsforgeapp.databinding.ActivityMainBinding;
 import com.ahmet.mapsforgeapp.gps.FakeGpsService;
 import com.ahmet.mapsforgeapp.gps.GpsListener;
+import com.ahmet.mapsforgeapp.gps.TabletLocationHelper;
 import com.ahmet.mapsforgeapp.map.MapUtils;
-
-import org.mapsforge.core.model.LatLong;
-import org.mapsforge.map.android.graphics.AndroidGraphicFactory;
-import org.mapsforge.map.layer.overlay.Marker;
-
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationResult;
 
 public class MainActivity extends AppCompatActivity implements GpsListener {
 
     private static final String TAG = "MainActivity";
     private static final int PICK_MAP_REQUEST = 1;
     private static final int LOAD_DEFAULT_MAP_REQUEST = 2;
+    private TabletLocationHelper tabletLocationHelper;
+
     private static final String MAP_PREF_ID = "MapPref";
     private static final String MAP_LIST_KEY = "MapListKey";
     SharedPreferencesManager preferencesManager;
@@ -118,6 +82,15 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
         setupMapView();
 
+        tabletLocationHelper = new TabletLocationHelper(this, new LocationCallback() {
+            @Override
+            public void onLocationResult(@NonNull LocationResult locationResult) {
+                super.onLocationResult(locationResult);
+
+
+                Log.d(TAG, "Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(locationResult.getLastLocation().getLatitude(),locationResult.getLastLocation().getLongitude()));
+            }
+        });
 
     }
 
@@ -172,9 +145,10 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         startActivityForResult(Intent.createChooser(intent, "Harita Dosyasını Seç"), PICK_MAP_REQUEST);
     }
 
-    private void resetMapSource(){
-        mapList.clear();
 
+    private void resetMapSource(){
+
+        mapList.clear();
         preferencesManager.saveStringList(MAP_LIST_KEY , mapList);
 
         mapViewController.clearMap();
@@ -227,6 +201,9 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         else{
             requestForStoragePermissions();
         }
+
+        tabletLocationHelper.startLocationUpdates();
+
 
     }
     public boolean checkStoragePermissions(){
@@ -309,6 +286,9 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
                 }
             }
         }
+
+        tabletLocationHelper.onRequestPermissionsResult(requestCode, grantResults);
+
     }
 
     @Override
@@ -317,7 +297,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
             mapViewController.getMapView().destroyAll();
             AndroidGraphicFactory.clearResourceMemoryCache();
             AndroidGraphicFactory.clearResourceFileCache();
-
+            tabletLocationHelper.stopLocationUpdates();
             super.onDestroy();
         } catch (Exception e) {
             Log.e("MainActivity", "Error in onDestroy", e);
@@ -328,4 +308,5 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     public void onLocationUpdate(LatLong latLong) {
         updateGpsLocation(latLong);
     }
+
 }
