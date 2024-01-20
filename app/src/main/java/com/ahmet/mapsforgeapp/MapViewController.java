@@ -5,9 +5,11 @@ import android.content.Context;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 
+import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 
@@ -32,6 +34,7 @@ import org.mapsforge.map.reader.MapFile;
 import org.mapsforge.map.rendertheme.InternalRenderTheme;
 import org.mapsforge.map.util.MapViewProjection;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -88,6 +91,26 @@ public class MapViewController {
             mapView.getLayerManager().getLayers().add(tileRendererLayer);
 
            // mapView.invalidate();
+
+            tileRendererLayer.requestRedraw();
+        } catch (Exception e) {
+            Log.e("MapViewController", "Error while adding map tile: " + e.getMessage());
+            Toast.makeText(context, "Error while adding map tile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+        }
+    }
+    public void addMapTile(String path) {
+        try {
+//            FileInputStream fileInputStream = new FileInputStream(Uri.parse("content://0@media/external/file/60"));
+
+           // multiMapDataStore.addMapDataStore(new MapFile(fileInputStream) , false ,false);
+
+            TileRendererLayer tileRendererLayer = new TileRendererLayer(tileCache, multiMapDataStore,
+                    mapView.getModel().mapViewPosition, AndroidGraphicFactory.INSTANCE);
+            tileRendererLayer.setXmlRenderTheme(InternalRenderTheme.OSMARENDER);
+
+            mapView.getLayerManager().getLayers().add(tileRendererLayer);
+
+            // mapView.invalidate();
 
             tileRendererLayer.requestRedraw();
         } catch (Exception e) {
