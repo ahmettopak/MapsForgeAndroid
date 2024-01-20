@@ -13,12 +13,38 @@
         app:layout_constraintBottom_toTopOf="@+id/selectMapButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
     <Button
         android:id="@+id/selectMapButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Select Map"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <CheckBox
+        android:id="@+id/autoCenterCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Auto Center"
+        app:layout_constraintStart_toEndOf="@+id/selectMapButton"
+        app:layout_constraintTop_toBottomOf="@+id/mapView" />
+
+    <CheckBox
+        android:id="@+id/gpsServiceCheckBox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Gps Service"
+        app:layout_constraintStart_toEndOf="@+id/autoCenterCheckBox"
+        app:layout_constraintTop_toBottomOf="@+id/mapView" />
+
+    <TextView
+        android:id="@+id/gpsLocationTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="20dp"
+        android:text="Gps Location"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/mapView" />
 </androidx.constraintlayout.widget.ConstraintLayout>

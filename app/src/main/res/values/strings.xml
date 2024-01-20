@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">MapsForgeApp</string>
+    <string name="gps_location">"GPS Location "</string>
 </resources>
