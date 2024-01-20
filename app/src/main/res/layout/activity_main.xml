@@ -20,7 +20,17 @@
         android:layout_height="wrap_content"
         android:text="Select Map"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/resetMapButton" />
+
+
+    <Button
+        android:id="@+id/resetMapButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Reset Map Source"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
 
     <CheckBox
         android:id="@+id/autoCenterCheckBox"

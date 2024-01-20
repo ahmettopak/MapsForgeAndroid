@@ -87,7 +87,9 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     private static final String TAG = "MainActivity";
     private static final int PICK_MAP_REQUEST = 1;
     private static final int LOAD_DEFAULT_MAP_REQUEST = 2;
-
+    private static final String MAP_PREF_ID = "MapPref";
+    private static final String MAP_LIST_KEY = "MapListKey";
+    SharedPreferencesManager preferencesManager;
     List<String> mapList = new ArrayList<>();
     private ActivityMainBinding binding;
     private MapViewController mapViewController;
@@ -105,6 +107,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         initializeComponents();
 
         binding.selectMapButton.setOnClickListener(view -> pickMapFile());
+        binding.resetMapButton.setOnClickListener(view -> resetMapSource());
 
         binding.gpsServiceCheckBox.setOnCheckedChangeListener(this::onGpsServiceCheckedChanged);
 
@@ -167,6 +170,10 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         intent.setType("*/*"); // Tüm dosya türlerini seçmek için
         startActivityForResult(Intent.createChooser(intent, "Harita Dosyasını Seç"), PICK_MAP_REQUEST);
     }
+    private void resetMapSource(){
+        mapList.clear();
+      //  SharedPreferencesManager.saveStringList(this , mapList);
+    }
 
     @NonNull
     private static String generateLatLongMapsLink(double latitude, double longitude) {
@@ -189,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
                     mapList.add(data.getData().toString());
 
-                    SharedPreferencesManager.saveStringList(getApplicationContext(), mapList);
+                    preferencesManager.saveStringList(MAP_LIST_KEY, mapList);
 
                 } catch (FileNotFoundException e) {
                     throw new RuntimeException(e);
@@ -252,31 +259,17 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         super.onStart();
 
 
+        // Build SharedPreferencesManager with custom preferences
+        preferencesManager = SharedPreferencesManager
+                .with(this)
+                .setPrefName(MAP_PREF_ID)
+                .setKeyStringList(MAP_LIST_KEY)
+                .build();
+
+
         if (checkStoragePermissions()){
-//            FileInputStream fis = getFileInputStreamForSpecificFile("/storage/emulated/0/Maps/turkey.map");
-//            mapViewController.addMapTile(fis);
-//
-//            try {
-//                FileInputStream fiss = (FileInputStream) getApplicationContext().getContentResolver().openInputStream(Uri.parse("content://media/external/file/1000000023"));
-//                mapViewController.addMapTile(fiss);
-//
-//            } catch (FileNotFoundException e) {
-//                throw new RuntimeException(e);
-//            }
-
-            List<String> retrievedList = SharedPreferencesManager.getStringList(getApplicationContext());
-
-
-            for (String mapItem : retrievedList){
-                FileInputStream fileInputStream = null;
-                try {
-                    fileInputStream = (FileInputStream) getApplicationContext().getContentResolver().openInputStream(Uri.parse(mapItem));
-                } catch (FileNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-                mapViewController.addMapTile(fileInputStream);
-            }
-
+            mapList = preferencesManager.getStringList(MAP_LIST_KEY);
+            mapViewController.addMapTileWithUriList(mapList);
         }
         else{
             requestForStoragePermissions();
@@ -296,7 +289,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         }
     }
 
-    //private static final int STORAGE_PERMISSION_CODE = 23;
     private void requestForStoragePermissions() {
         //Android is 11 (R) or above
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
@@ -325,7 +317,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
     }
 
-    private ActivityResultLauncher<Intent> storageActivityResultLauncher =
+    private final ActivityResultLauncher<Intent> storageActivityResultLauncher =
             registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
                     new ActivityResultCallback<ActivityResult>(){
 

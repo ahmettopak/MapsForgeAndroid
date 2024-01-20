@@ -36,6 +36,7 @@ import org.mapsforge.map.util.MapViewProjection;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -98,27 +99,18 @@ public class MapViewController {
             Toast.makeText(context, "Error while adding map tile: " + e.getMessage(), Toast.LENGTH_SHORT).show();
         }
     }
-    public void addMapTile(String path) {
-        try {
-//            FileInputStream fileInputStream = new FileInputStream(Uri.parse("content://0@media/external/file/60"));
 
-           // multiMapDataStore.addMapDataStore(new MapFile(fileInputStream) , false ,false);
-
-            TileRendererLayer tileRendererLayer = new TileRendererLayer(tileCache, multiMapDataStore,
-                    mapView.getModel().mapViewPosition, AndroidGraphicFactory.INSTANCE);
-            tileRendererLayer.setXmlRenderTheme(InternalRenderTheme.OSMARENDER);
-
-            mapView.getLayerManager().getLayers().add(tileRendererLayer);
-
-            // mapView.invalidate();
-
-            tileRendererLayer.requestRedraw();
-        } catch (Exception e) {
-            Log.e("MapViewController", "Error while adding map tile: " + e.getMessage());
+    public void addMapTileWithUriList(List<String> UriList){
+        for (String mapItem : UriList){
+            FileInputStream fileInputStream = null;
+            try {
+                fileInputStream = (FileInputStream) context.getContentResolver().openInputStream(Uri.parse(mapItem));
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+            addMapTile(fileInputStream);
         }
     }
-
-
     public static LatLong generateRandomLocation(LatLong destLatLong, double radius) {
         double angle = Math.random() * 2 * Math.PI;
         double distance = Math.random() * radius;
@@ -138,6 +130,7 @@ public class MapViewController {
 
         return new LatLong(lat, lon);
     }
+
     public MapView getMapView() {
         return mapView;
     }
