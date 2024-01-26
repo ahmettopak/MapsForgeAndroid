@@ -55,6 +55,7 @@ public class MapViewController {
 
     public void updateMarkerLatLong(Marker marker , LatLong latLong) {
         marker.setLatLong(latLong);
+        mapView.invalidate();
     }
 
     public void addMarker(Marker marker) {

@@ -59,6 +59,8 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     private ActivityMainBinding binding;
     private MapViewController mapViewController;
     private Marker robotMarker;
+    private Marker deviceMarker;
+
     private boolean autoCenter;
     FakeGpsService fakeGpsService;
 
@@ -87,10 +89,12 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
 
+                updateDeviceGpsLocation(new LatLong(locationResult.getLastLocation().getLatitude()  ,locationResult.getLastLocation().getLongitude()));
 
-                Log.d(TAG, "Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(locationResult.getLastLocation().getLatitude(),locationResult.getLastLocation().getLongitude()));
             }
         });
+
+        tabletLocationHelper.startLocationUpdates();
 
     }
 
@@ -103,9 +107,13 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     @SuppressLint("UseCompatLoadingForDrawables")
     private void setupMapView() {
         mapViewController.setMapView(findViewById(R.id.mapView));
-        robotMarker = MapUtils.createMarker(getDrawable(android.R.drawable.ic_menu_mylocation));
 
         mapViewController.getMapView().setZoomLevel((byte) 15);
+
+
+        robotMarker = MapUtils.createMarker(getDrawable(R.drawable.gps));
+
+        deviceMarker = MapUtils.createMarker(getDrawable(R.drawable.gps_nav));
 
     }
 
@@ -122,21 +130,33 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     }
 
 
-    private void updateGpsLocation(LatLong latLong) {
+    private void updateRobotGpsLocation(LatLong latLong) {
         mapViewController.updateMarkerLatLong(robotMarker, latLong);
 
         if (autoCenter) {
             mapViewController.getMapView().setCenter(robotMarker.getLatLong());
         }
 
+
+
+        //TODO state change
         mapViewController.addMarker(robotMarker);
 
         binding.gpsLocationTextView.setText(String.format("%s%s", getString(R.string.gps_location), robotMarker.getLatLong().toString()));
 
-        Log.d(TAG, "Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
+        Log.d(TAG, "Robot Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
 
     }
+    private void updateDeviceGpsLocation(LatLong latLong) {
+        mapViewController.updateMarkerLatLong(deviceMarker, latLong);
 
+
+        //TODO state change
+        mapViewController.addMarker(deviceMarker);
+
+        Log.d(TAG, "Device Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
+
+    }
 
 
     private void pickMapFile() {
@@ -306,7 +326,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
     @Override
     public void onLocationUpdate(LatLong latLong) {
-        updateGpsLocation(latLong);
+        updateRobotGpsLocation(latLong);
     }
 
 }
