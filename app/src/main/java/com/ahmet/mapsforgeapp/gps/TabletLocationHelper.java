@@ -22,8 +22,8 @@ import java.util.Timer;
  */
 public class TabletLocationHelper {
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 3;
-    private static final long UPDATE_INTERVAL = 5000; // 5 saniyede bir güncelleme
-    private static final long FASTEST_UPDATE_INTERVAL = 2000; // En fazla 2 saniye aralıklarla güncelleme
+    private static final long UPDATE_INTERVAL = 5000;          // 5 saniyede bir güncelleme
+    private static final long FASTEST_UPDATE_INTERVAL = 2000;  // En fazla 2 saniye aralıklarla güncelleme
 
     private final Activity activity;
     private final FusedLocationProviderClient fusedLocationClient;
@@ -39,7 +39,8 @@ public class TabletLocationHelper {
         if (ContextCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
             return true;
-        } else {
+        }
+        else {
             ActivityCompat.requestPermissions(activity,
                     new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
                     LOCATION_PERMISSION_REQUEST_CODE);

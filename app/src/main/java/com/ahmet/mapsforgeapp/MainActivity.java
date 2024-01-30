@@ -39,31 +39,30 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import com.ahmet.mapsforgeapp.gps.FakeGpsService;
-import com.ahmet.mapsforgeapp.gps.GpsListener;
+import com.ahmet.mapsforgeapp.gps.RobotGpsListener;
+import com.ahmet.mapsforgeapp.gps.TabletGpsListener;
 import com.ahmet.mapsforgeapp.gps.TabletLocationHelper;
 import com.ahmet.mapsforgeapp.map.MapUtils;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationResult;
 
-public class MainActivity extends AppCompatActivity implements GpsListener {
+public class MainActivity extends AppCompatActivity{
 
     private static final String TAG = "MainActivity";
     private static final int PICK_MAP_REQUEST = 1;
     private static final int LOAD_DEFAULT_MAP_REQUEST = 2;
-    private TabletLocationHelper tabletLocationHelper;
-
     private static final String MAP_PREF_ID = "MapPref";
     private static final String MAP_LIST_KEY = "MapListKey";
     SharedPreferencesManager preferencesManager;
     List<String> mapList = new ArrayList<>();
     private ActivityMainBinding binding;
     private MapViewController mapViewController;
-    private Marker robotMarker;
-    private Marker deviceMarker;
-
     private boolean autoCenter;
-    FakeGpsService fakeGpsService;
+    private FakeGpsService fakeGpsService;
+    private TabletLocationHelper tabletLocationHelper;
 
+    RobotGpsListener robotGpsListener;
+    TabletGpsListener tabletGpsListener;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,26 +75,28 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         binding.selectMapButton.setOnClickListener(view -> pickMapFile());
         binding.resetMapButton.setOnClickListener(view -> resetMapSource());
 
-        binding.gpsServiceCheckBox.setOnCheckedChangeListener(this::onGpsServiceCheckedChanged);
+        binding.gpsServiceCheckBox.setOnCheckedChangeListener(this::onRobotGpsServiceCheckedChanged);
 
         binding.autoCenterCheckBox.setOnCheckedChangeListener(this::onAutoCenterCheckedChanged);
 
-        fakeGpsService = new FakeGpsService(this);
-
         setupMapView();
+
+
+
+        tabletGpsListener = new TabletGpsListener(this , mapViewController);
+        robotGpsListener = new RobotGpsListener(this , mapViewController);
+
+
+        fakeGpsService = new FakeGpsService(robotGpsListener);
 
         tabletLocationHelper = new TabletLocationHelper(this, new LocationCallback() {
             @Override
             public void onLocationResult(@NonNull LocationResult locationResult) {
                 super.onLocationResult(locationResult);
-
-                updateDeviceGpsLocation(new LatLong(locationResult.getLastLocation().getLatitude()  ,locationResult.getLastLocation().getLongitude()));
+                tabletGpsListener.onLocationUpdate(new LatLong(locationResult.getLastLocation().getLatitude()  ,locationResult.getLastLocation().getLongitude()));
 
             }
         });
-
-        tabletLocationHelper.startLocationUpdates();
-
     }
 
     private void initializeComponents() {
@@ -107,17 +108,10 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     @SuppressLint("UseCompatLoadingForDrawables")
     private void setupMapView() {
         mapViewController.setMapView(findViewById(R.id.mapView));
-
         mapViewController.getMapView().setZoomLevel((byte) 15);
-
-
-        robotMarker = MapUtils.createMarker(getDrawable(R.drawable.gps));
-
-        deviceMarker = MapUtils.createMarker(getDrawable(R.drawable.gps_nav));
-
     }
 
-    private void onGpsServiceCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+    private void onRobotGpsServiceCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
         if (isChecked) {
             fakeGpsService.startFakeGpsTimer();
         } else {
@@ -130,35 +124,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
     }
 
 
-    private void updateRobotGpsLocation(LatLong latLong) {
-        mapViewController.updateMarkerLatLong(robotMarker, latLong);
-
-        if (autoCenter) {
-            mapViewController.getMapView().setCenter(robotMarker.getLatLong());
-        }
-
-
-
-        //TODO state change
-        mapViewController.addMarker(robotMarker);
-
-        binding.gpsLocationTextView.setText(String.format("%s%s", getString(R.string.gps_location), robotMarker.getLatLong().toString()));
-
-        Log.d(TAG, "Robot Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
-
-    }
-    private void updateDeviceGpsLocation(LatLong latLong) {
-        mapViewController.updateMarkerLatLong(deviceMarker, latLong);
-
-
-        //TODO state change
-        mapViewController.addMarker(deviceMarker);
-
-        Log.d(TAG, "Device Lat Long Test Link: " + MapUtils.generateLatLongMapsLink(robotMarker.getLatLong().latitude, robotMarker.getLatLong().longitude));
-
-    }
-
-
     private void pickMapFile() {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*"); // Tüm dosya türlerini seçmek için
@@ -167,15 +132,10 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
 
     private void resetMapSource(){
-
         mapList.clear();
         preferencesManager.saveStringList(MAP_LIST_KEY , mapList);
-
         mapViewController.clearMap();
-
     }
-
-
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -198,14 +158,13 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
                 Log.d(TAG, "onActivityResult: " +  Objects.requireNonNull(data.getData()));
                 mapViewController.addMapTile(fis);
-                mapViewController.addMarker(robotMarker);  // Todo fix marker z offset
+                //mapViewController.addMarker(robotMarker);  // Todo fix marker z offset
             }
         }
     }
     @Override
     protected void onStart() {
         super.onStart();
-
 
         // Build SharedPreferencesManager with custom preferences
         preferencesManager = SharedPreferencesManager
@@ -226,6 +185,7 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
 
 
     }
+
     public boolean checkStoragePermissions(){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.R){
             //Android is 11 (R) or above
@@ -322,11 +282,6 @@ public class MainActivity extends AppCompatActivity implements GpsListener {
         } catch (Exception e) {
             Log.e("MainActivity", "Error in onDestroy", e);
         }
-    }
-
-    @Override
-    public void onLocationUpdate(LatLong latLong) {
-        updateRobotGpsLocation(latLong);
     }
 
 }
